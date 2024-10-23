@@ -15,7 +15,7 @@ class QLearning:
         return self.argmax(state)
     
     def get_q_value(self, state, action):
-        # This methods is added to simulate the initialization of the Q-values
+        # This method is added to simulate the initialization of the Q-values
         return self.q_values.get((state, action), 0)
     
     def argmax(self, state):
