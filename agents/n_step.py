@@ -1,19 +1,27 @@
 import random
 import numpy as np
 
-class Sarsa:
-    def __init__(self, action_space, alpha=0.1, gamma=0.99, epsilon=0.1):
+class NStep:
+    def __init__(self, action_space, alpha, gamma, epsilon, n):
         self.action_space = action_space
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
+        self.n = n
         self.q_values = {}
+
+        self.reward_store = []
+        self.state_store = []
+        self.action_store = []
 
     def sample_action(self, state):
         if random.random() < self.epsilon:
-            return random.choice(self.action_space)
+            action = random.choice(self.action_space)
         else:
-            return self.argmax(state)
+            action = self.argmax(state)
+
+        self.action_store.append(action)
+        return action
         
     def argmax(self, state):
         max_action = None
@@ -29,7 +37,12 @@ class Sarsa:
     
     def get_q_value(self, state, action):
         return self.q_values.get((state, action), 0)
-        
+    
     def learn(self, state, action, reward, next_state, next_action):
-        td_error = reward + self.gamma * self.get_q_value(next_state, next_action) - self.get_q_value(state, action)
-        self.q_values[(state, action)] = self.get_q_value(state, action) + self.alpha * td_error
+        pass
+
+    def store_state(self, state):
+        self.state_store.append(state)
+
+    def store_reward(self, reward):
+        self.reward_store.append(reward)

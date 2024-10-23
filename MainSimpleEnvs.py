@@ -3,6 +3,7 @@ from Environments.SimpleEnvs.EscapeRoomEnv import EscapeRoomEnv
 
 from agents.q_learning import QLearning
 from agents.sarsa import Sarsa
+from agents.n_step import NStep
 
 
 def show(env, current_state, reward=None):
@@ -56,11 +57,42 @@ def run_sarsa(env, num_episodes):
             action = next_action
         print(f"Episode {episode} finished")
 
+# TODO: Refactor del año
+def run_n_step(env, num_episodes):
+    agent = NStep(env.action_space, 0.1, 0.9, 0.1, n=4)
+    for episode in range(num_episodes):
+        state = env.reset()
+        agent.store_state(state)
+        action = agent.sample_action(state)
+        episode_len = float('inf')
+        t = 0
+        while True:
+            if t < episode_len:
+                next_state, reward, done = env.step(action)
+                agent.store_state(next_state)
+                agent.store_reward(reward)
+                if done:
+                    episode_len = t + 1
+                else:
+                    action = agent.sample_action(next_state)
+            tau = t - agent.n + 1
+            if tau >= 0:
+            # TODO: Implement this in learn method
+                G = sum(agent.reward_store[i] * (agent.gamma ** (i - tau - 1)) for i in range(tau + 1, min(tau + agent.n, episode_len)))
+                if tau + agent.n < episode_len:
+                    G += agent.get_q_value(agent.state_store[tau + agent.n], agent.action_store[tau + agent.n]) * (agent.gamma ** agent.n)
+                agent.q_values[(agent.state_store[tau], agent.action_store[tau])] = agent.get_q_value(agent.state_store[tau], agent.action_store[tau]) + agent.alpha * (G - agent.get_q_value(agent.state_store[tau], agent.action_store[tau]))
+            if tau == episode_len - 1:
+                break
+            t += 1
+        print(f"Episode {episode} finished")
+
 
 if __name__ == "__main__":
     env = CliffEnv()
     # env = EscapeRoomEnv()
     # run_q_learning(env, 500)
-    run_sarsa(env, 500)
+    # run_sarsa(env, 500)
+    run_n_step(env, 500)
     # play_simple_env(env)
 
