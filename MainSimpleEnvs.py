@@ -2,6 +2,7 @@ from Environments.SimpleEnvs.CliffEnv import CliffEnv
 from Environments.SimpleEnvs.EscapeRoomEnv import EscapeRoomEnv
 
 from agents.q_learning import QLearning
+from agents.sarsa import Sarsa
 
 
 def show(env, current_state, reward=None):
@@ -29,7 +30,8 @@ def play_simple_env(simple_env):
         s, r, done = simple_env.step(action)
         show(simple_env, s, r)
 
-def run_agent(agent, env, num_episodes):
+def run_q_learning(env, num_episodes):
+    agent = QLearning(env.action_space)
     for episode in range(num_episodes):
         state = env.reset()
         done = False
@@ -40,11 +42,25 @@ def run_agent(agent, env, num_episodes):
             state = next_state
         print(f"Episode {episode} finished")
 
+def run_sarsa(env, num_episodes):
+    agent = Sarsa(env.action_space)
+    for episode in range(num_episodes):
+        state = env.reset()
+        done = False
+        action = agent.sample_action(state)
+        while not done:
+            next_state, reward, done = env.step(action)
+            next_action = agent.sample_action(next_state)
+            agent.learn(state, action, reward, next_state, next_action)
+            state = next_state
+            action = next_action
+        print(f"Episode {episode} finished")
+
 
 if __name__ == "__main__":
     env = CliffEnv()
     # env = EscapeRoomEnv()
-    q_learning_agent = QLearning(env.action_space)
-    run_agent(q_learning_agent, env, 500)
+    # run_q_learning(env, 500)
+    run_sarsa(env, 500)
     # play_simple_env(env)
 
