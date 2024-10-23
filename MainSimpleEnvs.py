@@ -1,6 +1,8 @@
 from Environments.SimpleEnvs.CliffEnv import CliffEnv
 from Environments.SimpleEnvs.EscapeRoomEnv import EscapeRoomEnv
 
+from agents.q_learning import QLearning
+
 
 def show(env, current_state, reward=None):
     env.show()
@@ -27,9 +29,22 @@ def play_simple_env(simple_env):
         s, r, done = simple_env.step(action)
         show(simple_env, s, r)
 
+def run_agent(agent, env, num_episodes):
+    for episode in range(num_episodes):
+        state = env.reset()
+        done = False
+        while not done:
+            action = agent.sample_action(state)
+            next_state, reward, done = env.step(action)
+            agent.learn(state, action, reward, next_state)
+            state = next_state
+        print(f"Episode {episode} finished")
+
 
 if __name__ == "__main__":
     env = CliffEnv()
     # env = EscapeRoomEnv()
-    play_simple_env(env)
+    q_learning_agent = QLearning(env.action_space)
+    run_agent(q_learning_agent, env, 500)
+    # play_simple_env(env)
 
