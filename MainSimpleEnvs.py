@@ -4,7 +4,7 @@ from Environments.SimpleEnvs.EscapeRoomEnv import EscapeRoomEnv
 from agents.q_learning import QLearning
 from agents.sarsa import Sarsa
 from agents.n_step import NStep
-
+from agents.dyna import DynaQ
 
 def show(env, current_state, reward=None):
     env.show()
@@ -55,6 +55,18 @@ def run_sarsa(env, num_episodes):
             agent.learn(state, action, reward, next_state, next_action)
             state = next_state
             action = next_action
+        print(f"Episode {episode} finished")
+
+def run_dyna(env, num_episodes):
+    agent = DynaQ(env.action_space)
+    for episode in range(num_episodes):
+        state = env.reset()
+        done = False
+        while not done:
+            action = agent.sample_action(state)
+            next_state, reward, done = env.step(action)
+            agent.learn(state, action, reward, next_state)
+            state = next_state
         print(f"Episode {episode} finished")
 
 # TODO: Refactor del año
