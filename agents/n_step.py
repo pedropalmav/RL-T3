@@ -10,18 +10,15 @@ class NStep:
         self.n = n
         self.q_values = {}
 
-        self.reward_store = []
+        self.reward_store = [0] # Para guardar la primera recompensa obtenida como R_{t+1}
         self.state_store = []
         self.action_store = []
 
     def sample_action(self, state):
         if random.random() < self.epsilon:
-            action = random.choice(self.action_space)
+            return random.choice(self.action_space)
         else:
-            action = self.argmax(state)
-
-        self.action_store.append(action)
-        return action
+            return self.argmax(state)
         
     def argmax(self, state):
         max_action = None
@@ -38,11 +35,22 @@ class NStep:
     def get_q_value(self, state, action):
         return self.q_values.get((state, action), 0)
     
-    def learn(self, state, action, reward, next_state, next_action):
-        pass
+    def learn(self, tau, episode_len):
+        g = sum(self.reward_store[i] * (self.gamma ** (i - tau - 1)) for i in range(tau + 1, min(tau + self.n, episode_len) + 1))
+        if tau + self.n < episode_len:
+            g += self.get_q_value(self.state_store[tau + self.n], self.action_store[tau + self.n]) * (self.gamma ** self.n)
+        self.q_values[(self.state_store[tau], self.action_store[tau])] = self.get_q_value(self.state_store[tau], self.action_store[tau]) + self.alpha * (g - self.get_q_value(self.state_store[tau], self.action_store[tau]))
 
     def store_state(self, state):
         self.state_store.append(state)
 
     def store_reward(self, reward):
         self.reward_store.append(reward)
+
+    def store_action(self, action):
+        self.action_store.append(action)
+
+    def reset_stores(self):
+        self.reward_store = [0]
+        self.state_store = []
+        self.action_store = []

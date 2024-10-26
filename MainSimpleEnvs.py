@@ -61,10 +61,12 @@ def run_sarsa(env, num_episodes):
 def run_n_step(env, num_episodes):
     agent = NStep(env.action_space, 0.1, 0.9, 0.1, n=4)
     for episode in range(num_episodes):
+        agent.reset_stores()
         state = env.reset()
         agent.store_state(state)
         action = agent.sample_action(state)
-        episode_len = float('inf')
+        agent.store_action(action)
+        episode_len = float('inf') # T in pseudo code
         t = 0
         while True:
             if t < episode_len:
@@ -75,13 +77,10 @@ def run_n_step(env, num_episodes):
                     episode_len = t + 1
                 else:
                     action = agent.sample_action(next_state)
+                    agent.store_action(action)
             tau = t - agent.n + 1
             if tau >= 0:
-            # TODO: Implement this in learn method
-                G = sum(agent.reward_store[i] * (agent.gamma ** (i - tau - 1)) for i in range(tau + 1, min(tau + agent.n, episode_len)))
-                if tau + agent.n < episode_len:
-                    G += agent.get_q_value(agent.state_store[tau + agent.n], agent.action_store[tau + agent.n]) * (agent.gamma ** agent.n)
-                agent.q_values[(agent.state_store[tau], agent.action_store[tau])] = agent.get_q_value(agent.state_store[tau], agent.action_store[tau]) + agent.alpha * (G - agent.get_q_value(agent.state_store[tau], agent.action_store[tau]))
+                agent.learn(tau, episode_len)
             if tau == episode_len - 1:
                 break
             t += 1
