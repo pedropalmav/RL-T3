@@ -18,7 +18,6 @@ def plot_average_length(lengths, filename="mutli_goal_lengths.png"):
     plt.figure()
     for key, value in lengths.items():
         plt.plot(value, label=key)
-    plt.plot(lengths)
     plt.xlabel("Episodes")
     plt.ylabel("Average Length")
     plt.savefig(os.path.join("imgs", filename))
@@ -95,12 +94,12 @@ if __name__ == '__main__':
     num_of_episodes = 500
     
     functions = [run_q_learning, run_sarsa, run_n_step]
-    agents_avg_returns = {}
+    agents_avg_lengths = {}
     for function in functions:
-        average_returns = np.zeros(num_of_episodes)
+        average_lengths = np.zeros(num_of_episodes)
         for i in range(num_of_experiments):
             env = RoomEnv()
-            returns = function(env, num_of_episodes)
-            average_returns += (returns - average_returns) / (i + 1)
-        agents_avg_returns[function.__name__] = average_returns
-    plot_average_length(agents_avg_returns)
+            lengths = function(env, num_of_episodes)
+            average_lengths += (lengths - average_lengths) / (i + 1)
+        agents_avg_lengths[function.__name__] = average_lengths
+    plot_average_length(agents_avg_lengths)
