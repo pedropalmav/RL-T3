@@ -2,7 +2,7 @@ import random
 import numpy as np
 
 class NStep:
-    def __init__(self, action_space, alpha, gamma, epsilon, n):
+    def __init__(self, action_space, n, alpha=0.1, gamma=1.0, epsilon=0.1):
         self.action_space = action_space
         self.alpha = alpha
         self.gamma = gamma

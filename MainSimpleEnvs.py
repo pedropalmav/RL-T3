@@ -59,7 +59,7 @@ def run_sarsa(env, num_episodes):
 
 # TODO: Refactor del año
 def run_n_step(env, num_episodes):
-    agent = NStep(env.action_space, 0.1, 0.9, 0.1, n=4)
+    agent = NStep(env.action_space, 4)
     for episode in range(num_episodes):
         agent.reset_stores()
         state = env.reset()
