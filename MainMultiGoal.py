@@ -16,6 +16,8 @@ def play_room_env():
 
 def plot_average_length(lengths, filename="mutli_goal_lengths.png"):
     plt.figure()
+    for key, value in lengths.items():
+        plt.plot(value, label=key)
     plt.plot(lengths)
     plt.xlabel("Episodes")
     plt.ylabel("Average Length")
@@ -38,7 +40,7 @@ def run_q_learning(env, num_of_episodes):
     return episode_lengths
 
 def run_sarsa(env, num_episodes):
-    agent = Sarsa(env.action_space)
+    agent = Sarsa(env.action_space, gamma=0.99, alpha=0.1, epsilon=0.1)
     episode_lengths = np.zeros(num_episodes)
     for episode in range(num_episodes):
         state = env.reset()
@@ -56,7 +58,7 @@ def run_sarsa(env, num_episodes):
     return episode_lengths
 
 def run_n_step(env, num_episodes):
-    agent = NStep(env.action_space, 4)
+    agent = NStep(env.action_space, 8, gamma=0.99, alpha=0.1, epsilon=0.1)
     episode_lengths = np.zeros(num_episodes)
     for episode in range(num_episodes):
         agent.reset_stores()
@@ -92,10 +94,13 @@ if __name__ == '__main__':
     num_of_experiments = 100
     num_of_episodes = 500
     
-    average_returns = np.zeros(num_of_episodes)
-    function = run_q_learning
-    for i in range(num_of_experiments):
-        env = RoomEnv()
-        returns = function(env, num_of_episodes)
-        average_returns += (returns - average_returns) / (i + 1)
-    plot_average_length(average_returns)
+    functions = [run_q_learning, run_sarsa, run_n_step]
+    agents_avg_returns = {}
+    for function in functions:
+        average_returns = np.zeros(num_of_episodes)
+        for i in range(num_of_experiments):
+            env = RoomEnv()
+            returns = function(env, num_of_episodes)
+            average_returns += (returns - average_returns) / (i + 1)
+        agents_avg_returns[function.__name__] = average_returns
+    plot_average_length(agents_avg_returns)
