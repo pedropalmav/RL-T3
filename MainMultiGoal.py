@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 from Environments.MultiGoalEnvs.RoomEnv import RoomEnv
 from MainSimpleEnvs import play_simple_env
 from agents.q_learning import QLearning
+from agents.sarsa import Sarsa
+from agents.n_step import NStep
 
 def play_room_env():
     n_episodes = 10
@@ -34,6 +36,56 @@ def run_q_learning(env, num_of_episodes):
             episode_length += 1
         episode_lengths[episode] = episode_length
     return episode_lengths
+
+def run_sarsa(env, num_episodes):
+    agent = Sarsa(env.action_space)
+    episode_lengths = np.zeros(num_episodes)
+    for episode in range(num_episodes):
+        state = env.reset()
+        done = False
+        action = agent.sample_action(state)
+        episode_length = 1
+        while not done:
+            next_state, reward, done = env.step(action)
+            next_action = agent.sample_action(next_state)
+            agent.learn(state, action, reward, next_state, next_action)
+            state = next_state
+            action = next_action
+            episode_length += 1
+        episode_lengths[episode] = episode_length
+    return episode_lengths
+
+def run_n_step(env, num_episodes):
+    agent = NStep(env.action_space, 4)
+    episode_lengths = np.zeros(num_episodes)
+    for episode in range(num_episodes):
+        agent.reset_stores()
+        state = env.reset()
+        agent.store_state(state)
+        action = agent.sample_action(state)
+        agent.store_action(action)
+        episode_len = float('inf') # T in pseudo code
+        t = 0
+
+        while True:
+            if t < episode_len:
+                next_state, reward, done = env.step(action)
+                agent.store_state(next_state)
+                agent.store_reward(reward)
+                if done:
+                    episode_len = t + 1
+                else:
+                    action = agent.sample_action(next_state)
+                    agent.store_action(action)
+            tau = t - agent.n + 1
+            if tau >= 0:
+                agent.learn(tau, episode_len)
+            if tau == episode_len - 1:
+                break
+            t += 1
+        episode_lengths[episode] = episode_len
+    return episode_lengths
+
 
 
 if __name__ == '__main__':
