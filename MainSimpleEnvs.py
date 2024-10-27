@@ -35,12 +35,15 @@ def play_simple_env(simple_env):
         s, r, done = simple_env.step(action)
         show(simple_env, s, r)
 
-def plot_returns(returns, filename="returns.png"):
+def plot_returns(agents_returns, filename="returns.png"):
     plt.figure()
-    plt.plot(returns)
+    for agent, returns in agents_returns.items():
+        plt.plot(returns, label=agent)
     plt.xlabel("Episodes")
     plt.ylabel("Average Return")
-    plt.ylim(-200, returns.max())
+    max_return = max([returns.max() for returns in agents_returns.values()])
+    plt.ylim(-200, max_return)
+    plt.legend()
     plt.savefig(os.path.join("imgs", filename))
 
 def run_q_learning(env, num_episodes):
@@ -115,9 +118,13 @@ if __name__ == "__main__":
     # env = EscapeRoomEnv()
     num_of_experiments = 100
     num_of_episodes = 500
-    function = run_sarsa
-    average_returns = np.zeros(num_of_episodes)
-    for i in range(num_of_experiments):
-        returns = function(env, num_of_episodes)
-        average_returns += (returns - average_returns) / (i + 1)
-    plot_returns(average_returns, filename=f"{'_'.join(function.__name__.split('_')[1:])}.png")
+
+    agents_returns = {}
+    agents_functions = [run_q_learning, run_sarsa, run_n_step]
+    for function in agents_functions:
+        average_returns = np.zeros(num_of_episodes)
+        for i in range(num_of_experiments):
+            returns = function(env, num_of_episodes)
+            average_returns += (returns - average_returns) / (i + 1)
+        agents_returns[function.__name__[4:]] = average_returns
+    plot_returns(agents_returns, filename=f"average_returns.png")
