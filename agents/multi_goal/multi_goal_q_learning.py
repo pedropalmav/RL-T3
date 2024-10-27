@@ -1,8 +1,6 @@
 from agents.q_learning import QLearning
 
 class MultiGoalQLearning(QLearning):
-    def get_q_value(self, state, action):
-        return self.q_values.get((state, action), 1.0)
     def learn(self, state, action, reward, next_state, goals):
         for goal in goals:
             multi_goal_state = (state[0], goal)

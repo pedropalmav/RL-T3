@@ -91,7 +91,7 @@ def run_n_step(env, num_episodes):
     return episode_lengths
 
 def run_multi_goal_q_learning(env, num_of_episodes):
-    agent = MultiGoalQLearning(env.action_space, gamma=0.99, alpha=0.1, epsilon=0.1)
+    agent = MultiGoalQLearning(env.action_space, gamma=0.99, alpha=0.1, epsilon=0.1, q_baseline=1.0)
     goals = env.goals
     episode_lengths = np.zeros(num_of_episodes)
     for episode in range(num_of_episodes):
