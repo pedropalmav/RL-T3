@@ -7,6 +7,7 @@ from MainSimpleEnvs import play_simple_env
 from agents.q_learning import QLearning
 from agents.sarsa import Sarsa
 from agents.n_step import NStep
+from agents.multi_goal.multi_goal_q_learning import MultiGoalQLearning
 
 def play_room_env():
     n_episodes = 10
@@ -36,6 +37,8 @@ def run_q_learning(env, num_of_episodes):
             state = next_state
             episode_length += 1
         episode_lengths[episode] = episode_length
+        if (episode + 1) % 10 == 0:
+            print(f"Episode {episode + 1} finished")
     return episode_lengths
 
 def run_sarsa(env, num_episodes):
@@ -87,13 +90,30 @@ def run_n_step(env, num_episodes):
         episode_lengths[episode] = episode_len
     return episode_lengths
 
+def run_multi_goal_q_learning(env, num_of_episodes):
+    agent = MultiGoalQLearning(env.action_space, gamma=0.99, alpha=0.1, epsilon=0.1)
+    goals = env.goals
+    episode_lengths = np.zeros(num_of_episodes)
+    for episode in range(num_of_episodes):
+        state = env.reset()
+        done = False
+        episode_length = 0
+        while not done:
+            action = agent.sample_action(state)
+            next_state, reward, done = env.step(action)
+            agent.learn(state, action, reward, next_state, goals)
+            state = next_state
+            episode_length += 1
+        episode_lengths[episode] = episode_length
+    return episode_lengths
 
 
 if __name__ == '__main__':
     num_of_experiments = 100
     num_of_episodes = 500
     
-    functions = [run_q_learning, run_sarsa, run_n_step]
+    # functions = [run_q_learning, run_sarsa, run_n_step]
+    functions = [run_multi_goal_q_learning]
     agents_avg_lengths = {}
     for function in functions:
         average_lengths = np.zeros(num_of_episodes)
@@ -101,5 +121,6 @@ if __name__ == '__main__':
             env = RoomEnv()
             lengths = function(env, num_of_episodes)
             average_lengths += (lengths - average_lengths) / (i + 1)
+            print(f"Experiment {i + 1} finished")
         agents_avg_lengths[function.__name__] = average_lengths
     plot_average_length(agents_avg_lengths)
