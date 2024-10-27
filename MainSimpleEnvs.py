@@ -53,9 +53,9 @@ def run_q_learning(env, num_episodes):
         while not done:
             action = agent.sample_action(state)
             next_state, reward, done = env.step(action)
-            episode_return += reward
-            agent.learn(state, action, reward, next_state)
+            agent.learn(state, action, reward, next_state, done)
             state = next_state
+            episode_return += reward
         episode_returns[episode] = episode_return
     return episode_returns
 
@@ -70,14 +70,13 @@ def run_sarsa(env, num_episodes):
         while not done:
             next_state, reward, done = env.step(action)
             next_action = agent.sample_action(next_state)
-            episode_return += reward
-            agent.learn(state, action, reward, next_state, next_action)
+            agent.learn(state, action, reward, next_state, next_action, done)
             state = next_state
             action = next_action
+            episode_return += reward
         episode_returns[episode] = episode_return
     return episode_returns
 
-# TODO: Refactor del año
 def run_n_step(env, num_episodes):
     agent = NStep(env.action_space, 4)
     episode_returns = np.zeros(num_episodes)
@@ -116,7 +115,7 @@ if __name__ == "__main__":
     # env = EscapeRoomEnv()
     num_of_experiments = 100
     num_of_episodes = 500
-    function = run_n_step
+    function = run_sarsa
     average_returns = np.zeros(num_of_episodes)
     for i in range(num_of_experiments):
         returns = function(env, num_of_episodes)
