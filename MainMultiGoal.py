@@ -8,6 +8,7 @@ from agents.q_learning import QLearning
 from agents.sarsa import Sarsa
 from agents.n_step import NStep
 from agents.multi_goal.multi_goal_q_learning import MultiGoalQLearning
+from agents.multi_goal.multi_goal_sarsa import MultiGoalSarsa
 
 def play_room_env():
     n_episodes = 10
@@ -37,8 +38,6 @@ def run_q_learning(env, num_of_episodes):
             state = next_state
             episode_length += 1
         episode_lengths[episode] = episode_length
-        if (episode + 1) % 10 == 0:
-            print(f"Episode {episode + 1} finished")
     return episode_lengths
 
 def run_sarsa(env, num_episodes):
@@ -107,13 +106,31 @@ def run_multi_goal_q_learning(env, num_of_episodes):
         episode_lengths[episode] = episode_length
     return episode_lengths
 
+def run_multi_goal_sarsa(env, num_episodes):
+    agent = MultiGoalSarsa(env.action_space, gamma=0.99, alpha=0.1, epsilon=0.1, q_baseline=1.0)
+    goals = env.goals
+    episode_lengths = np.zeros(num_episodes)
+    for episode in range(num_episodes):
+        state = env.reset()
+        done = False
+        action = agent.sample_action(state)
+        episode_length = 1
+        while not done:
+            next_state, reward, done = env.step(action)
+            next_action = agent.sample_action(next_state)
+            agent.learn(state, action, reward, next_state, next_action, goals)
+            state = next_state
+            action = next_action
+            episode_length += 1
+        episode_lengths[episode] = episode_length
+    return episode_lengths
+
 
 if __name__ == '__main__':
     num_of_experiments = 100
     num_of_episodes = 500
     
-    # functions = [run_q_learning, run_sarsa, run_n_step]
-    functions = [run_multi_goal_q_learning]
+    functions = [run_q_learning, run_sarsa, run_n_step, run_multi_goal_q_learning, run_multi_goal_sarsa]
     agents_avg_lengths = {}
     for function in functions:
         average_lengths = np.zeros(num_of_episodes)
