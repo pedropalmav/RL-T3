@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 from Environments.MultiAgentEnvs.HunterAndPreyEnv import HunterAndPreyEnv
 from Environments.MultiAgentEnvs.CentralizedHunterEnv import CentralizedHunterEnv
+from Environments.MultiAgentEnvs.HunterEnv import HunterEnv
 from MainSimpleEnvs import show, get_action_from_user
 
 from agents.q_learning import QLearning
@@ -39,7 +40,8 @@ def plot_average_length(lengths, filename):
     plt.ylabel("Average Length")
     plt.savefig(os.path.join("imgs", filename))
 
-def run_q_learning(env, num_of_episodes):
+def run_centralized(num_of_episodes):
+    env = CentralizedHunterEnv()
     agent = QLearning(env.action_space, gamma=0.95, alpha=0.1, epsilon=0.1, q_baseline=1)
     episode_lengths = np.zeros(num_of_episodes // 100 + 1)
     for episode in range(num_of_episodes):
@@ -56,15 +58,38 @@ def run_q_learning(env, num_of_episodes):
             episode_lengths[(episode + 1) // 100] = episode_length
     return episode_lengths
 
+def run_decentralized_cooperative(num_of_episodes):
+    env = HunterEnv()
+    agent_1 = QLearning(env.single_agent_action_space, gamma=0.95, alpha=0.1, epsilon=0.1, q_baseline=1)
+    agent_2 = QLearning(env.single_agent_action_space, gamma=0.95, alpha=0.1, epsilon=0.1, q_baseline=1)
+    episode_lengths = np.zeros(num_of_episodes // 100 + 1)
+    for episode in range(num_of_episodes):
+        state = env.reset()
+        done = False
+        episode_length = 0
+        while not done:
+            action_1 = agent_1.sample_action(state)
+            action_2 = agent_2.sample_action(state)
+            action = (action_1, action_2)
+            next_state, reward, done = env.step(action)
+            agent_1.learn(state, action_1, reward[0], next_state, done)
+            agent_2.learn(state, action_2, reward[1], next_state, done)
+            state = next_state
+            episode_length += 1
+        if (episode + 1) % 100 == 0 or episode == 0:
+            episode_lengths[(episode + 1) // 100] = episode_length
+    return episode_lengths
+
 if __name__ == '__main__':
-    env = CentralizedHunterEnv()
     num_of_experiments = 30
     num_of_episodes = 50000
 
     avg_episode_lengths = np.zeros(num_of_episodes // 100 + 1)
     for i in range(num_of_experiments):
         print("Experiment: ", i + 1)
-        episode_lengths = run_q_learning(env, num_of_episodes)
+        # episode_lengths = run_centralized(num_of_episodes)
+        episode_lengths = run_decentralized_cooperative(num_of_episodes)
         avg_episode_lengths += (episode_lengths - avg_episode_lengths) / (i + 1)
     
+    # TODO: Save data in json file, because it takes a lot of time to run
     plot_average_length(avg_episode_lengths, "centralized_hunter_lengths.png")
