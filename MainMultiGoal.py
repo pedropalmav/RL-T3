@@ -22,6 +22,7 @@ def plot_average_length(lengths, filename="mutli_goal_lengths.png"):
         plt.plot(value, label=key)
     plt.xlabel("Episodes")
     plt.ylabel("Average Length")
+    plt.legend()
     plt.savefig(os.path.join("imgs", filename))
 
 def run_q_learning(env, num_of_episodes):
@@ -139,5 +140,5 @@ if __name__ == '__main__':
             lengths = function(env, num_of_episodes)
             average_lengths += (lengths - average_lengths) / (i + 1)
             print(f"Experiment {i + 1} finished")
-        agents_avg_lengths[function.__name__] = average_lengths
+        agents_avg_lengths[function.__name__[4:]] = average_lengths
     plot_average_length(agents_avg_lengths)
