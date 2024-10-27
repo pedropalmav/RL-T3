@@ -30,7 +30,10 @@ class Sarsa:
     
     def get_q_value(self, state, action):
         return self.q_values.get((state, action), self.q_baseline)
-        
-    def learn(self, state, action, reward, next_state, next_action):
-        td_error = reward + self.gamma * self.get_q_value(next_state, next_action) - self.get_q_value(state, action)
+            
+    def learn(self, state, action, reward, next_state, next_action, done):
+        if done:
+            td_error = reward - self.get_q_value(state, action)
+        else:
+            td_error = reward + self.gamma * self.get_q_value(next_state, next_action) - self.get_q_value(state, action)
         self.q_values[(state, action)] = self.get_q_value(state, action) + self.alpha * td_error

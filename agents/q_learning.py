@@ -31,6 +31,9 @@ class QLearning:
                 max_action.append(action)
         return random.choice(max_action)
 
-    def learn(self, state, action, reward, next_state):
-        td_error = reward + self.gamma * self.get_q_value(next_state, self.argmax(next_state)) - self.get_q_value(state, action)
+    def learn(self, state, action, reward, next_state, done):
+        if done:
+            td_error = reward - self.get_q_value(state, action)
+        else:
+            td_error = reward + self.gamma * self.get_q_value(next_state, self.argmax(next_state)) - self.get_q_value(state, action)
         self.q_values[(state, action)] = self.get_q_value(state, action) + self.alpha * td_error

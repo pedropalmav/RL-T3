@@ -25,7 +25,7 @@ def plot_average_length(lengths, filename="mutli_goal_lengths.png"):
     plt.savefig(os.path.join("imgs", filename))
 
 def run_q_learning(env, num_of_episodes):
-    agent = QLearning(env.action_space, gamma=0.99, alpha=0.1, epsilon=0.1)
+    agent = QLearning(env.action_space, gamma=0.99, alpha=0.1, epsilon=0.1, q_baseline=1)
     episode_lengths = np.zeros(num_of_episodes)
     for episode in range(num_of_episodes):
         state = env.reset()
@@ -34,14 +34,14 @@ def run_q_learning(env, num_of_episodes):
         while not done:
             action = agent.sample_action(state)
             next_state, reward, done = env.step(action)
-            agent.learn(state, action, reward, next_state)
+            agent.learn(state, action, reward, next_state, done)
             state = next_state
             episode_length += 1
         episode_lengths[episode] = episode_length
     return episode_lengths
 
 def run_sarsa(env, num_episodes):
-    agent = Sarsa(env.action_space, gamma=0.99, alpha=0.1, epsilon=0.1)
+    agent = Sarsa(env.action_space, gamma=0.99, alpha=0.1, epsilon=0.1, q_baseline=1)
     episode_lengths = np.zeros(num_episodes)
     for episode in range(num_episodes):
         state = env.reset()
@@ -51,7 +51,7 @@ def run_sarsa(env, num_episodes):
         while not done:
             next_state, reward, done = env.step(action)
             next_action = agent.sample_action(next_state)
-            agent.learn(state, action, reward, next_state, next_action)
+            agent.learn(state, action, reward, next_state, next_action, done)
             state = next_state
             action = next_action
             episode_length += 1
