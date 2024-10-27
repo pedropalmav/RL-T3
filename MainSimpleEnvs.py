@@ -1,3 +1,7 @@
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+
 from Environments.SimpleEnvs.CliffEnv import CliffEnv
 from Environments.SimpleEnvs.EscapeRoomEnv import EscapeRoomEnv
 
@@ -31,68 +35,90 @@ def play_simple_env(simple_env):
         s, r, done = simple_env.step(action)
         show(simple_env, s, r)
 
+def plot_returns(returns, filename="returns.png"):
+    plt.figure()
+    plt.plot(returns)
+    plt.xlabel("Episodes")
+    plt.ylabel("Average Return")
+    plt.ylim(-200, returns.max())
+    plt.savefig(os.path.join("imgs", filename))
+
 def run_q_learning(env, num_episodes):
     agent = QLearning(env.action_space)
+    episode_returns = np.zeros(num_episodes)
     for episode in range(num_episodes):
         state = env.reset()
         done = False
+        episode_return = 0
         while not done:
             action = agent.sample_action(state)
             next_state, reward, done = env.step(action)
+            episode_return += reward
             agent.learn(state, action, reward, next_state)
             state = next_state
-        print(f"Episode {episode} finished")
+        episode_returns[episode] = episode_return
+    return episode_returns
 
 def run_sarsa(env, num_episodes):
     agent = Sarsa(env.action_space)
+    episode_returns = np.zeros(num_episodes)
     for episode in range(num_episodes):
         state = env.reset()
         done = False
+        episode_return = 0
         action = agent.sample_action(state)
         while not done:
             next_state, reward, done = env.step(action)
             next_action = agent.sample_action(next_state)
+            episode_return += reward
             agent.learn(state, action, reward, next_state, next_action)
             state = next_state
             action = next_action
-        print(f"Episode {episode} finished")
+        episode_returns[episode] = episode_return
+    return episode_returns
 
 # TODO: Refactor del año
 def run_n_step(env, num_episodes):
-    agent = NStep(env.action_space, 0.1, 0.9, 0.1, n=4)
+    agent = NStep(env.action_space, 4)
+    episode_returns = np.zeros(num_episodes)
     for episode in range(num_episodes):
+        agent.reset_stores()
         state = env.reset()
         agent.store_state(state)
         action = agent.sample_action(state)
-        episode_len = float('inf')
+        agent.store_action(action)
+        episode_len = float('inf') # T in pseudo code
         t = 0
+
+        episode_return = 0
         while True:
             if t < episode_len:
                 next_state, reward, done = env.step(action)
                 agent.store_state(next_state)
                 agent.store_reward(reward)
+                episode_return += reward
                 if done:
                     episode_len = t + 1
                 else:
                     action = agent.sample_action(next_state)
+                    agent.store_action(action)
             tau = t - agent.n + 1
             if tau >= 0:
-            # TODO: Implement this in learn method
-                G = sum(agent.reward_store[i] * (agent.gamma ** (i - tau - 1)) for i in range(tau + 1, min(tau + agent.n, episode_len)))
-                if tau + agent.n < episode_len:
-                    G += agent.get_q_value(agent.state_store[tau + agent.n], agent.action_store[tau + agent.n]) * (agent.gamma ** agent.n)
-                agent.q_values[(agent.state_store[tau], agent.action_store[tau])] = agent.get_q_value(agent.state_store[tau], agent.action_store[tau]) + agent.alpha * (G - agent.get_q_value(agent.state_store[tau], agent.action_store[tau]))
+                agent.learn(tau, episode_len)
             if tau == episode_len - 1:
                 break
             t += 1
-        print(f"Episode {episode} finished")
-
+        episode_returns[episode] = episode_return
+    return episode_returns
 
 if __name__ == "__main__":
     env = CliffEnv()
     # env = EscapeRoomEnv()
-    # run_q_learning(env, 500)
-    # run_sarsa(env, 500)
-    run_n_step(env, 500)
-    # play_simple_env(env)
-
+    num_of_experiments = 100
+    num_of_episodes = 500
+    function = run_n_step
+    average_returns = np.zeros(num_of_episodes)
+    for i in range(num_of_experiments):
+        returns = function(env, num_of_episodes)
+        average_returns += (returns - average_returns) / (i + 1)
+    plot_returns(average_returns, filename=f"{'_'.join(function.__name__.split('_')[1:])}.png")

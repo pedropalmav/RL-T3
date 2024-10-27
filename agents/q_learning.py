@@ -2,7 +2,7 @@ import random
 import numpy as np
 
 class QLearning:
-    def __init__(self, action_space, gamma=0.9, alpha=0.1, epsilon=0.1):
+    def __init__(self, action_space, gamma=1.0, alpha=0.1, epsilon=0.1):
         self.action_space = action_space
         self.gamma = gamma
         self.alpha = alpha
