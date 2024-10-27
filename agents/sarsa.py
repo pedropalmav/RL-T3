@@ -2,12 +2,13 @@ import random
 import numpy as np
 
 class Sarsa:
-    def __init__(self, action_space, alpha=0.1, gamma=0.99, epsilon=0.1):
+    def __init__(self, action_space, alpha=0.1, gamma=0.99, epsilon=0.1, q_baseline=0):
         self.action_space = action_space
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
         self.q_values = {}
+        self.q_baseline = q_baseline
 
     def sample_action(self, state):
         if random.random() < self.epsilon:
@@ -28,7 +29,7 @@ class Sarsa:
         return random.choice(max_action)
     
     def get_q_value(self, state, action):
-        return self.q_values.get((state, action), 0)
+        return self.q_values.get((state, action), self.q_baseline)
         
     def learn(self, state, action, reward, next_state, next_action):
         td_error = reward + self.gamma * self.get_q_value(next_state, next_action) - self.get_q_value(state, action)
