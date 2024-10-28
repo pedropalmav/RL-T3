@@ -1,4 +1,5 @@
 import os
+import json
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -32,14 +33,25 @@ def play_hunter_env():
         s, r, done = hunter_env.step(action)
         show(hunter_env, s, r)
 
-def plot_average_length(lengths, filename):
-    episodes = [i * 100 for i in range(len(lengths))]
+def plot_average_length(filename):
+    with open(os.path.join("data", "multi_agent_eps_lengths.json"), "r") as f:
+        data = json.load(f)
+    episodes = [i * 100 for i in range(len(data["centralized"]))]
     episodes[0] = 1
     plt.figure()
-    plt.plot(episodes, lengths)
+    for setting_name, lengths in data.items():
+        plt.plot(episodes, lengths, label=setting_name)
     plt.xlabel("Episodes")
     plt.ylabel("Average Length")
+    plt.legend()
     plt.savefig(os.path.join("imgs", filename))
+
+def save_lengths(setting_name, lengths, filename):
+    with open(os.path.join("data", filename), "r") as f:
+        data = json.load(f)
+    data[setting_name] = lengths.tolist()
+    with open(os.path.join("data", filename), "w") as f:
+        json.dump(data, f, indent=2)
 
 def run_centralized(num_of_episodes):
     env = CentralizedHunterEnv()
@@ -106,16 +118,37 @@ def run_decentralized_competitive(num_of_episodes):
             episode_lengths[(episode + 1) // 100] = episode_length
     return episode_lengths
 
+def select_setting():
+    print("Select setting:")
+    print("1. Centralized Hunter")
+    print("2. Decentralized Cooperative")
+    print("3. Decentralized Competitive")
+    print("4. Plot average length")
+    setting = input("Setting: ")
+    if setting == "1":
+        return run_centralized
+    elif setting == "2":
+        return run_decentralized_cooperative
+    elif setting == "3":
+        return run_decentralized_competitive
+    elif setting == "4":
+        return plot_average_length
+    else:
+        print("Invalid setting")
+        return None
+
 if __name__ == '__main__':
     num_of_experiments = 30
     num_of_episodes = 50000
 
-    avg_episode_lengths = np.zeros(num_of_episodes // 100 + 1)
-    for i in range(num_of_experiments):
-        print("Experiment: ", i + 1)
-        # episode_lengths = run_centralized(num_of_episodes)
-        episode_lengths = run_decentralized_cooperative(num_of_episodes)
-        avg_episode_lengths += (episode_lengths - avg_episode_lengths) / (i + 1)
-    
-    # TODO: Save data in json file, because it takes a lot of time to run
-    plot_average_length(avg_episode_lengths, "centralized_hunter_lengths.png")
+    setting = select_setting()
+    if setting == plot_average_length:
+        setting("multi_agent_eps_lengths.png")
+    else:
+        avg_episode_lengths = np.zeros(num_of_episodes // 100 + 1)
+        for i in range(num_of_experiments):
+            print("Experiment: ", i + 1)
+            episode_lengths = setting(num_of_episodes)
+            avg_episode_lengths += (episode_lengths - avg_episode_lengths) / (i + 1)
+        
+        save_lengths(setting.__name__[4:], avg_episode_lengths, "multi_agent_eps_lengths.json")
