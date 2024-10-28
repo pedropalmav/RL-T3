@@ -41,9 +41,11 @@ def play_env_without_extra_memory():
     play_simple_env(env)
 
 if __name__ == '__main__':
-    memory_size = 2
     env = InvisibleDoorEnv()
-    env = KOrderMemory(env, memory_size)
+    # memory_size = 2
+    # env = KOrderMemory(env, memory_size)
+    num_of_bits = 1
+    env = BinaryMemory(env, num_of_bits)
     num_of_experiments = 30
     num_of_episodes = 1000
     baselines = [run_q_learning, run_sarsa, run_n_step]
@@ -55,4 +57,4 @@ if __name__ == '__main__':
             average_lengths += (lengths - average_lengths) / (i + 1)
             print(f"Experiment {i + 1} finished")
         baselines_avg_lengths[baseline.__name__[4:]] = average_lengths
-    plot_average_length(baselines_avg_lengths, "2_order_memory_eps_lengths.png")
+    plot_average_length(baselines_avg_lengths, "binary_memory_eps_lengths.png")
