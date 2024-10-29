@@ -59,8 +59,8 @@ def run_sarsa(env, num_episodes):
         episode_lengths[episode] = episode_length
     return episode_lengths
 
-def run_n_step(env, num_episodes):
-    agent = NStep(env.action_space, 8, gamma=0.99, alpha=0.1, epsilon=0.1)
+def run_n_step(env, num_episodes, n=8):
+    agent = NStep(env.action_space, n, gamma=0.99, alpha=0.1, epsilon=0.1)
     episode_lengths = np.zeros(num_episodes)
     for episode in range(num_episodes):
         agent.reset_stores()

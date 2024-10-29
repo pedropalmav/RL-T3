@@ -72,7 +72,10 @@ if __name__ == '__main__':
     for baseline in baselines:
         average_lengths = np.zeros(num_of_episodes)
         for i in range(num_of_experiments):
-            lengths = baseline(env, num_of_episodes)
+            if baseline == run_n_step:
+                lengths = baseline(env, num_of_episodes, n=16)
+            else:
+                lengths = baseline(env, num_of_episodes)
             average_lengths += (lengths - average_lengths) / (i + 1)
             print(f"Experiment {i + 1} finished")
         baselines_avg_lengths[baseline.__name__[4:]] = average_lengths
