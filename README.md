@@ -10,13 +10,13 @@ To test this domain you have to run the following command:
 python MainMultiGoal.py
 ```
 
-### Multi Agent Domains :rabbit_face: :fox:
+### Multi Agent Domains 🐰🦊
 These domains can be executed by running the command:
 ```bash
 python MainMultiAgent.py
 ```
 
-### Partially Observable Domains :locked_with_key:
+### Partially Observable Domains 🔐
 The next command will let you try this domain:
 ```bash
 python MainPartiallyObservable.py
