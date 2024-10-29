@@ -2,7 +2,7 @@ import random
 import numpy as np
 
 class Sarsa:
-    def __init__(self, action_space, alpha=0.1, gamma=0.99, epsilon=0.1, q_baseline=0):
+    def __init__(self, action_space, alpha=0.1, gamma=1.0, epsilon=0.1, q_baseline=0):
         self.action_space = action_space
         self.alpha = alpha
         self.gamma = gamma
