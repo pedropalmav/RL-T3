@@ -2,13 +2,14 @@ import random
 import numpy as np
 
 class NStep:
-    def __init__(self, action_space, n, alpha=0.1, gamma=1.0, epsilon=0.1):
+    def __init__(self, action_space, n, alpha=0.1, gamma=1.0, epsilon=0.1, q_baseline=0):
         self.action_space = action_space
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
         self.n = n
         self.q_values = {}
+        self.q_baseline = q_baseline
 
         self.reward_store = [0] # Para guardar la primera recompensa obtenida como R_{t+1}
         self.state_store = []
@@ -33,7 +34,7 @@ class NStep:
         return random.choice(max_action)
     
     def get_q_value(self, state, action):
-        return self.q_values.get((state, action), 0)
+        return self.q_values.get((state, action), self.q_baseline)
     
     def learn(self, tau, episode_len):
         g = sum(self.reward_store[i] * (self.gamma ** (i - tau - 1)) for i in range(tau + 1, min(tau + self.n, episode_len) + 1))
