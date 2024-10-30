@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 from Environments.PartiallyObservableEnvs.InvisibleDoorEnv import InvisibleDoorEnv
 from MainSimpleEnvs import show, get_action_from_user, play_simple_env
@@ -7,7 +6,11 @@ from MemoryWrappers.BinaryMemory import BinaryMemory
 from MemoryWrappers.KOrderMemory import KOrderMemory
 from MemoryWrappers.KOrderBuffer import KOrderBuffer
 
-from MainMultiGoal import run_q_learning, run_sarsa, run_n_step, plot_average_length
+from agents.q_learning import QLearning
+from agents.sarsa import Sarsa
+from agents.n_step import NStep
+
+from MainMultiGoal import plot_average_length
 
 
 def play_env_with_binary_memory():
@@ -41,6 +44,71 @@ def play_env_without_extra_memory():
     env = InvisibleDoorEnv()
     play_simple_env(env)
 
+def run_q_learning(env, num_of_episodes):
+    agent = QLearning(env.action_space, gamma=0.99, alpha=0.1, epsilon=0.01, q_baseline=1)
+    episode_lengths = np.zeros(num_of_episodes)
+    for episode in range(num_of_episodes):
+        state = env.reset()
+        done = False
+        episode_length = 0
+        while not done:
+            action = agent.sample_action(state)
+            next_state, reward, done = env.step(action)
+            agent.learn(state, action, reward, next_state, done)
+            state = next_state
+            episode_length += 1
+        episode_lengths[episode] = episode_length
+    return episode_lengths
+
+def run_sarsa(env, num_episodes):
+    agent = Sarsa(env.action_space, gamma=0.99, alpha=0.1, epsilon=0.01, q_baseline=1)
+    episode_lengths = np.zeros(num_episodes)
+    for episode in range(num_episodes):
+        state = env.reset()
+        done = False
+        action = agent.sample_action(state)
+        episode_length = 1
+        while not done:
+            next_state, reward, done = env.step(action)
+            next_action = agent.sample_action(next_state)
+            agent.learn(state, action, reward, next_state, next_action, done)
+            state = next_state
+            action = next_action
+            episode_length += 1
+        episode_lengths[episode] = episode_length
+    return episode_lengths
+
+def run_n_step(env, num_episodes):
+    agent = NStep(env.action_space, 16, gamma=0.99, alpha=0.1, epsilon=0.01, q_baseline=1)
+    episode_lengths = np.zeros(num_episodes)
+    for episode in range(num_episodes):
+        agent.reset_stores()
+        state = env.reset()
+        agent.store_state(state)
+        action = agent.sample_action(state)
+        agent.store_action(action)
+        episode_len = float('inf') # T in pseudo code
+        t = 0
+
+        while True:
+            if t < episode_len:
+                next_state, reward, done = env.step(action)
+                agent.store_state(next_state)
+                agent.store_reward(reward)
+                if done:
+                    episode_len = t + 1
+                else:
+                    action = agent.sample_action(next_state)
+                    agent.store_action(action)
+            tau = t - agent.n + 1
+            if tau >= 0:
+                agent.learn(tau, episode_len)
+            if tau == episode_len - 1:
+                break
+            t += 1
+        episode_lengths[episode] = episode_len
+    return episode_lengths
+
 def select_memory_wrapper():
     print("Select memory wrapper:")
     print("1. No memory")
@@ -72,10 +140,7 @@ if __name__ == '__main__':
     for baseline in baselines:
         average_lengths = np.zeros(num_of_episodes)
         for i in range(num_of_experiments):
-            if baseline == run_n_step:
-                lengths = baseline(env, num_of_episodes, n=16)
-            else:
-                lengths = baseline(env, num_of_episodes)
+            lengths = baseline(env, num_of_episodes)
             average_lengths += (lengths - average_lengths) / (i + 1)
             print(f"Experiment {i + 1} finished")
         baselines_avg_lengths[baseline.__name__[4:]] = average_lengths

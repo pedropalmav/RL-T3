@@ -45,7 +45,7 @@ This will display a menu where you can select the type of memory you might want 
 
 The execution times are:
 
-- `No Memory`: ~8.5 minutes
-- `K-order memory`: ~2 minutes
+- `No Memory`: ~14 minutes
+- `K-order memory`: ~1 minutes
 - `Binary memory`: ~3 minutes
-- `K-order buffer`: ~40 seconds
+- `K-order buffer`: ~30 seconds
