@@ -10,7 +10,9 @@ There are multiple domains you can replicate: Simple Domains, Mutli Goal Domains
 python MainSimpleEnvs.py
 ```
 
-
+### Dyna and Rmax in EscapeRoomEnv
+Please run `MainDynaRMax.py` and change the boolean `dyna` to run either Dyna or RMax.
+The script `table.py` generates the final results table based off of the `.npy` files saved in the previous step.
 ### Multi Goal Domains :door:
 To test this domain you have to run the following command:
 ```bash
