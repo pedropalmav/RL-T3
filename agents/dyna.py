@@ -7,19 +7,35 @@ class DynaQ:
         self.gamma = gamma
         self.epsilon = epsilon
         self.n = n
-        self.q_table = defaultdict(lambda: np.zeros(action_space))
-        self.model = defaultdict(lambda: (0, 0))
+        self.q_values = defaultdict(lambda: 0)
+        self.model = {} 
 
     def sample_action(self, state):
         if np.random.random() < self.epsilon:
-            return np.random.choice(self.action_space)
-        return np.argmax(self.q_table[state])
-
+            return str(np.random.choice(self.action_space))
+        return self.argmax(state)
+    
+    def argmax(self, state):
+        max_action = None
+        q_max = float('-inf')
+        for action in self.action_space:
+            q_value = self.q_values[(state, action)]
+            if q_value > q_max:
+                q_max = q_value
+                max_action = [action]
+            elif q_value == q_max:
+                max_action.append(action)
+        return str(np.random.choice(max_action))
+    
+    
     def learn(self, state, action, reward, next_state):
-        self.q_table[state][action] += self.alpha * (reward + self.gamma * np.max(self.q_table[next_state]) - self.q_table[state][action])
+        #print(type(action))
+        self.q_values[(state, action)] += self.alpha * (reward + self.gamma * np.max(self.q_values[(next_state,action)]) - self.q_values[(state,action)])
         self.model[state] = (reward, next_state)
         for _ in range(self.n):
-            state = np.random.choice(list(self.model.keys()))
+            model_keys = list(self.model.keys())
+            state_idx = np.random.choice(len(model_keys))
+            state = model_keys[state_idx]
             action = np.random.choice(self.action_space)
             reward, next_state = self.model[state]
-            self.q_table[state][action] += self.alpha * (reward + self.gamma * np.max(self.q_table[next_state]) - self.q_table[state][action])
+            self.q_values[(state,action)] += self.alpha * (reward + self.gamma * np.max(self.q_values[(next_state,action)]) - self.q_values[(state, action)])
